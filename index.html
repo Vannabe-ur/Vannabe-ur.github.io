@@ -280,15 +280,15 @@
     .repo-lang { font-size: 9px; opacity: 0.55; margin-top: 2px; }
 
     /* ========================================================
-       IMAGE UPLOAD ZONE — click or drag & drop to replace photo.
-       The uploaded image gets a green terminal filter via CSS:
+       PROFILE IMAGE ZONE — fixed asset from assets/profile.png.
+       The image keeps the green terminal filter via CSS:
          grayscale → removes color
          contrast  → makes it high-contrast
          mix-blend-mode:screen → blends with green background
     ======================================================== */
     .img-upload-zone {
       width: 100%;
-      min-height: 230px;
+      min-height: 320px;
       border: 1px dashed rgba(0,255,179,0.35);
       display: flex;
       flex-direction: column;
@@ -311,6 +311,7 @@
       mix-blend-mode: screen;      /* blends image with green bg */
       position: absolute;
       top: 0; left: 0;
+      z-index: 2;
     }
 
     /* "IMG_SRC: [REPLACEABLE]" label bottom-right */
@@ -596,50 +597,14 @@
     <div class="right-panel">
 
       <div class="section-label" style="align-self:flex-start;">
-        :: PROFILE IMAGE &nbsp;<span style="opacity:0.4;">[ CLICK TO REPLACE ]</span>
+        :: PROFILE IMAGE &nbsp;<span style="opacity:0.4;">[ STATIC ASSET ]</span>
       </div>
 
-      <!--
-        IMAGE UPLOAD ZONE
-        - onclick  → opens hidden file input
-        - ondragover / ondrop → handles drag & drop
-        - The ASCII art inside is the placeholder before upload
-      -->
-      <div class="img-upload-zone" id="dropZone"
-           onclick="document.getElementById('fileInput').click()"
-           ondragover="event.preventDefault(); this.style.borderColor='#00ffb3'"
-           ondragleave="this.style.borderColor='rgba(0,255,179,0.35)'"
-           ondrop="handleDrop(event)"
-           title="Click or drag & drop your photo">
-
-        <!-- ASCII art placeholder — hidden after image is uploaded -->
-        <pre style="font-family:'Share Tech Mono',monospace; font-size:5px; line-height:1.15;
-                    color:#00ffb3; letter-spacing:0.3px; text-align:center; z-index:1; padding:4px;"
-             id="asciiPlaceholder">
-   ░░▒▒▓▓███▓▓▒▒░░   ░░▒▒▓▓
-  ░░▒▒▓███████▓▒▒░░ ░▒▓▓▒░
-  ░▒▓▓████▓▓▓███▓▒░░▒▒░░
-  ░▒▓███▓░░  ░▓███▓▒▒░
-  ░▒▓██▒      ░▓██▓▒░
-   ░▒▓██▓░    ▒▓██▒░
-   ░░▒▓▓███▓▓███▓▒░
-    ░░▒▒▓▓████▓▒░░
-      ░░▒▒▓▓▒▒░░
-     ░▒▒▓▓██▓▓▒▒░
-    ░▒▓▓████████▓▒░
-   ░▒▓███▓▒░░▒▓███▓░
-   ░▒▓██▒░    ░▒▓██▓░
-    ░▒░          ░▒▓░
-        </pre>
-
-        <span class="img-overlay">IMG_SRC: [REPLACEABLE]</span>
-        <span class="img-hint" id="uploadHint" style="position:absolute; bottom:10px;">
-          [ CLICK OR DRAG YOUR PHOTO HERE ]
-        </span>
+      <!-- Fixed profile image loaded from assets/profile.png -->
+      <div class="img-upload-zone" id="dropZone">
+        <img src="assets/profile.png" alt="Profile preview" id="profilePreview">
+        <span class="img-overlay">IMG_SRC: assets/profile.png</span>
       </div>
-
-      <!-- Hidden file input — triggered by clicking the upload zone -->
-      <input type="file" id="fileInput" accept="image/*" style="display:none">
 
       <!-- SKILLS MATRIX -->
       <div style="width:100%;">
@@ -730,7 +695,7 @@
        2. Skills bar animation
        3. Nav tab switching
        4. Glitch buttons
-       5. Image upload (click + drag & drop)
+       5. Static profile image block
 ============================================================ -->
 <script>
 
@@ -819,50 +784,6 @@
     setTimeout(() => btn.textContent = original, 900);  // reset after 0.9s
   }
 
-
-  /* ----------------------------------------------------------
-     5. IMAGE UPLOAD — click or drag & drop
-     - fileInput hidden <input type="file"> is triggered by clicking zone
-     - FileReader reads the file as a data URL
-     - An <img> is injected into the zone; ASCII placeholder hidden
-     - CSS filter makes it look like a green terminal photo
-  ---------------------------------------------------------- */
-  const fileInput       = document.getElementById('fileInput');
-  const dropZone        = document.getElementById('dropZone');
-  const uploadHint      = document.getElementById('uploadHint');
-  const asciiPlaceholder = document.getElementById('asciiPlaceholder');
-
-  function loadImage(file) {
-    if (!file || !file.type.startsWith('image/')) return;  // only images
-
-    const reader = new FileReader();
-    reader.onload = ev => {
-      // Hide ASCII art + hint text
-      asciiPlaceholder.style.display = 'none';
-      uploadHint.classList.add('hidden');
-
-      // Remove old image if re-uploading
-      const existing = dropZone.querySelector('img');
-      if (existing) existing.remove();
-
-      // Create and insert the new image
-      const img = document.createElement('img');
-      img.src = ev.target.result;               // data URL
-      dropZone.insertBefore(img, dropZone.firstChild);
-      // CSS handles the green filter — no extra JS needed
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // Trigger on <input> change (click-to-upload)
-  fileInput.addEventListener('change', e => loadImage(e.target.files[0]));
-
-  // Drag & drop handler
-  function handleDrop(e) {
-    e.preventDefault();
-    dropZone.style.borderColor = 'rgba(0,255,179,0.35)';  // reset border
-    loadImage(e.dataTransfer.files[0]);
-  }
 
 </script>
 </body>
