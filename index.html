@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N. VANNA — BIOS PROFILE</title>
+
+  <!--
+  ============================================================
+    FONTS
+    - Share Tech Mono  →  body text, labels, code (monospace)
+    - VT323            →  big retro BIOS title only
+    Both loaded for free from Google Fonts.
+  ============================================================
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================================
+       RESET — zero out browser default spacing on everything
+    ======================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ========================================================
+       BODY — dark page background, centers the card
+    ======================================================== */
+    body {
+      background: #0a0a0a;           /* near-black page bg */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ========================================================
+       BIOS CARD — the main outer container
+       #00ffb3 is the signature terminal green color
+    ======================================================== */
+    .bios-root {
+      background: #000;
+      color: #00ffb3;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      border: 1px solid #00ffb3;
+      position: relative;           /* needed for .scan-line overlay */
+      overflow: hidden;
+      width: 100%;
+      max-width: 900px;
+      /* soft green glow around the card */
+      box-shadow: 0 0 40px rgba(0,255,179,0.15), 0 0 80px rgba(0,255,179,0.05);
+    }
+
+    /* ========================================================
+       SCAN-LINE OVERLAY — faint horizontal lines like a CRT screen.
+       Uses repeating-linear-gradient + pointer-events:none
+       so clicks pass through to content below.
+    ======================================================== */
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,179,0.025) 2px,   /* thin semi-transparent green line */
+        rgba(0,255,179,0.025) 4px
+      );
+      pointer-events: none;          /* clicks go through */
+      z-index: 10;                   /* sits above everything */
+    }
+
+    /* ========================================================
+       FLICKER ANIMATION — subtle opacity pulse, like an old monitor.
+       Applied to .bios-root via class="bios-root flicker"
+    ======================================================== */
+    .flicker { animation: flicker 8s infinite; }
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1;    }
+      96%           { opacity: 0.92; }
+      97%           { opacity: 1;    }
+      98%           { opacity: 0.95; }
+    }
+
+    /* ========================================================
+       HEADER BAR — top strip with BIOS metadata text
+    ======================================================== */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 12px;
+      border-bottom: 1px solid #00ffb3;
+      font-size: 10px;
+      letter-spacing: 1px;
+      background: #000;
+    }
+    .header-bar span { color: #00ffb3; }
+
+    /* ========================================================
+       NAV BAR — tab row: SUMMARY | FIXED | BOOT | SEQ | MORE+
+    ======================================================== */
+    .nav-bar { display: flex; border-bottom: 1px solid #00ffb3; }
+
+    .nav-item {
+      padding: 5px 20px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      border-right: 1px solid #00ffb3;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ffb3;
+      background: transparent;
+      /* Reset <button> borders so only right border shows */
+      border-top: none;
+      border-left: none;
+      border-bottom: none;
+    }
+    /* Active tab: inverted green/black */
+    .nav-item.active { background: #00ffb3; color: #000; font-weight: bold; }
+    /* Hover highlight (skip active tab) */
+    .nav-item:hover:not(.active) { background: rgba(0,255,179,0.1); }
+
+    /* ========================================================
+       MAIN GRID — splits page into LEFT (info) and RIGHT (image)
+    ======================================================== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;  /* two equal columns */
+      min-height: 460px;
+    }
+
+    /* LEFT PANEL — text content */
+    .left-panel {
+      border-right: 1px solid #00ffb3;
+      padding: 12px 14px;
+      font-size: 11px;
+      line-height: 1.7;
+      overflow: hidden;
+    }
+
+    /* RIGHT PANEL — image + skills */
+    .right-panel {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+    }
+
+    /* ========================================================
+       TYPOGRAPHY HELPERS
+    ======================================================== */
+
+    /* Small grey uppercase labels like ":: BIOS SCREEN" */
+    .section-label {
+      color: #00ffb3;
+      font-size: 9px;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+      opacity: 0.6;
+    }
+
+    /* Big retro name — uses VT323 font */
+    .bios-title {
+      font-family: 'VT323', monospace;
+      font-size: 38px;
+      color: #00ffb3;
+      line-height: 1;
+      margin-bottom: 4px;
+      letter-spacing: 3px;
+    }
+
+    /* GitHub handle line below name */
+    .subtitle {
+      font-size: 9px;
+      opacity: 0.45;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    /* ========================================================
+       LOADING PROGRESS BAR — animates from 0 → 100% on load
+    ======================================================== */
+    .progress-bar {
+      height: 3px;
+      background: rgba(0,255,179,0.15);  /* dim track */
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .progress-fill {
+      height: 3px;
+      background: #00ffb3;
+      animation: fillbar 2.5s ease forwards;
+      width: 0;
+    }
+    @keyframes fillbar { to { width: 100%; } }
+
+    /* ========================================================
+       TYPEWRITER CODE BLOCK — the "ECHO" boot lines on the left
+    ======================================================== */
+    .code-block {
+      color: #00ffb3;
+      font-size: 10px;
+      line-height: 1.9;
+      opacity: 0.85;
+    }
+    /* Line number prefix — dimmed, non-selectable */
+    .code-block .ln {
+      opacity: 0.25;
+      margin-right: 8px;
+      user-select: none;
+    }
+    /* Each boot line starts invisible, fades in via JS staggering */
+    .boot-line {
+      opacity: 0;
+      animation: fadein 0.2s ease forwards;
+    }
+    @keyframes fadein { to { opacity: 1; } }
+
+    /* ========================================================
+       DIVIDER LINE — faint horizontal separator
+    ======================================================== */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(0,255,179,0.25);
+      margin: 8px 0;
+    }
+
+    /* ========================================================
+       STAT ROWS — key / value pairs (ROLE, INSTITUTION, etc.)
+    ======================================================== */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      padding: 2px 0;
+    }
+    .stat-key { opacity: 0.45; }   /* dim key */
+    .stat-val { color: #00ffb3; }  /* bright value */
+
+    /* ========================================================
+       DOMAIN TAGS — pill badges for skills/areas
+       .active-tag = filled green
+       plain .tag  = outlined
+    ======================================================== */
+    .tag {
+      display: inline-block;
+      border: 1px solid rgba(0,255,179,0.5);
+      padding: 1px 7px;
+      font-size: 9px;
+      margin: 2px 2px 2px 0;
+      color: #00ffb3;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .tag.active-tag {
+      background: #00ffb3;
+      color: #000;
+      border-color: #00ffb3;
+    }
+
+    /* ========================================================
+       REPO ITEMS — featured project entries with left border
+    ======================================================== */
+    .repo-item {
+      border-left: 2px solid #00ffb3;
+      padding-left: 8px;
+      margin: 6px 0;
+    }
+    .repo-name { font-size: 10px; color: #00ffb3; text-decoration: none; }
+    .repo-name:hover { text-decoration: underline; }
+    .repo-desc { font-size: 9px; opacity: 0.45; line-height: 1.4; }
+    .repo-lang { font-size: 9px; opacity: 0.55; margin-top: 2px; }
+
+    /* ========================================================
+       IMAGE UPLOAD ZONE — click or drag & drop to replace photo.
+       The uploaded image gets a green terminal filter via CSS:
+         grayscale → removes color
+         contrast  → makes it high-contrast
+         mix-blend-mode:screen → blends with green background
+    ======================================================== */
+    .img-upload-zone {
+      width: 100%;
+      min-height: 230px;
+      border: 1px dashed rgba(0,255,179,0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+    .img-upload-zone:hover { border-color: #00ffb3; }
+
+    /* Uploaded image — fills zone with green terminal filter */
+    .img-upload-zone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(100%) contrast(1.5) brightness(0.8);
+      mix-blend-mode: screen;      /* blends image with green bg */
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    /* "IMG_SRC: [REPLACEABLE]" label bottom-right */
+    .img-overlay {
+      position: absolute;
+      bottom: 5px; right: 8px;
+      font-size: 8px;
+      opacity: 0.4;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Upload hint text — hidden after image loads */
+    .img-hint {
+      font-size: 9px;
+      opacity: 0.35;
+      text-align: center;
+      z-index: 2;
+      pointer-events: none;
+      letter-spacing: 1px;
+    }
+    .img-hint.hidden { display: none; }
+
+    /* ========================================================
+       SKILLS BARS — animated progress bars
+       Width stored in data-w attribute, animated by JS on load
+    ======================================================== */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 100%;
+    }
+    .skill-label  { font-size: 9px; opacity: 0.45; margin-bottom: 3px; }
+    .skill-track  { height: 4px; background: rgba(0,255,179,0.12); }  /* grey track */
+    .skill-fill   {
+      height: 4px;
+      background: #00ffb3;
+      width: 0;                          /* starts at 0 */
+      transition: width 1.5s ease;       /* JS sets target width → animates */
+    }
+
+    /* ========================================================
+       GITHUB BUTTON
+    ======================================================== */
+    .gh-btn {
+      display: block;
+      border: 1px solid #00ffb3;
+      color: #00ffb3;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-align: center;
+      padding: 7px;
+      text-decoration: none;
+      letter-spacing: 2px;
+      background: #000;
+      transition: all 0.15s;
+      width: 100%;
+    }
+    .gh-btn:hover { background: #00ffb3; color: #000; }  /* invert on hover */
+
+    /* ========================================================
+       BOTTOM BAR — BANK 1 / BANK 2 with "I HATE YOU" buttons
+       (faithful to the original NAKZDESIGN artwork!)
+    ======================================================== */
+    .bottom-bar {
+      border-top: 1px solid #00ffb3;
+      padding: 5px 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      font-size: 9px;
+    }
+    .bank        { display: flex; align-items: center; gap: 8px; }
+    .bank-label  { opacity: 0.4; min-width: 44px; }
+    .hate-btn {
+      border: 1px solid #00ffb3;
+      padding: 2px 10px;
+      font-size: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ffb3;
+      cursor: pointer;
+      background: #000;
+      transition: all 0.1s;
+      letter-spacing: 1px;
+    }
+    .hate-btn:hover { background: #00ffb3; color: #000; }
+
+    /* ========================================================
+       FOOTER BAR — bottom metadata strip
+    ======================================================== */
+    .footer-bar {
+      border-top: 1px solid rgba(0,255,179,0.3);
+      padding: 4px 12px;
+      font-size: 9px;
+      opacity: 0.35;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ========================================================
+       BLINKING CURSOR (reusable utility class)
+    ======================================================== */
+    @keyframes blink { 50% { opacity: 0; } }
+    .blink { animation: blink 1s step-end infinite; }
+
+    /* ========================================================
+       RESPONSIVE — stack panels on small screens
+    ======================================================== */
+    @media (max-width: 600px) {
+      .main-grid      { grid-template-columns: 1fr; }
+      .left-panel     { border-right: none; border-bottom: 1px solid #00ffb3; }
+      .bottom-bar     { grid-template-columns: 1fr; }
+      .bios-title     { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!--
+  ============================================================
+    ROOT CARD
+    .flicker applies the subtle screen flicker animation
+  ============================================================
+-->
+<div class="bios-root flicker">
+
+  <!-- CRT scan-line overlay (purely decorative) -->
+  <div class="scan-line"></div>
+
+  <!-- ======================================================
+       HEADER BAR — mimics real BIOS top strip
+  ====================================================== -->
+  <div class="header-bar">
+    <span>MR BIOS (TM)</span>
+    <span>COPYRIGHT NAKZDESIGN(C) 2025</span>
+    <span>RESEARCH</span>
+    <span>VER V1.03</span>
+    <span>PORT......3</span>
+  </div>
+
+  <!-- ======================================================
+       NAV TABS — clicking calls setNav() in JS
+  ====================================================== -->
+  <div class="nav-bar">
+    <button class="nav-item active" onclick="setNav(this)">SUMMARY</button>
+    <button class="nav-item"        onclick="setNav(this)">FIXED</button>
+    <button class="nav-item"        onclick="setNav(this)">BOOT</button>
+    <button class="nav-item"        onclick="setNav(this)">SEQ</button>
+    <button class="nav-item"        onclick="setNav(this)">MORE+</button>
+  </div>
+
+  <!-- ======================================================
+       MAIN CONTENT — two-column grid
+  ====================================================== -->
+  <div class="main-grid">
+
+    <!-- ====================================================
+         LEFT PANEL — Portfolio / Bio info
+    ==================================================== -->
+    <div class="left-panel">
+
+      <!-- Section label -->
+      <div class="section-label">:: BIOS SCREEN</div>
+
+      <!-- Big retro name (VT323 font) -->
+      <div class="bios-title">N. VANNA</div>
+      <div class="subtitle">VANNABE-UR // GITHUB.COM/VANNABE-UR</div>
+
+      <!-- Loading bar — animates on page load via CSS -->
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+
+      <!-- Boot lines injected here by JS typewriter effect -->
+      <div class="code-block" id="bio-lines"></div>
+
+      <hr class="divider">
+
+      <!-- SYSTEM FIELDS — key/value metadata -->
+      <div class="section-label" style="margin-top:8px;">:: SYSTEM FIELDS</div>
+      <div class="stat-row">
+        <span class="stat-key">ROLE</span>
+        <span class="stat-val">Data Science Student</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">INSTITUTION</span>
+        <span class="stat-val">ITC, Cambodia</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">LOCATION</span>
+        <span class="stat-val">Phnom Penh, KH</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">TIMEZONE</span>
+        <span class="stat-val">UTC+7</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">STATUS</span>
+        <span class="stat-val">🤒 Out sick</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">REPOS</span>
+        <span class="stat-val">10 public</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">GITHUB</span>
+        <span class="stat-val">
+          <a href="https://github.com/Vannabe-ur" target="_blank" style="color:#00ffb3;">Vannabe-ur</a>
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">INSTAGRAM</span>
+        <span class="stat-val">
+          <a href="https://www.instagram.com/vannabe_ur21/" target="_blank" style="color:#00ffb3;">@vannabe_ur21</a>
+        </span>
+      </div>
+
+      <hr class="divider">
+
+      <!-- DOMAIN TAGS — active-tag = filled, plain = outline -->
+      <div class="section-label">:: DOMAIN TAGS</div>
+      <div style="margin-top:4px;">
+        <span class="tag active-tag">ENVIRONMENT</span>
+        <span class="tag active-tag">ECONOMICS</span>
+        <span class="tag active-tag">IoT</span>
+        <span class="tag active-tag">DESIGN</span>
+        <span class="tag">DATA SCI</span>
+        <span class="tag">ML/AI</span>
+        <span class="tag">EMBEDDED</span>
+      </div>
+
+      <hr class="divider">
+
+      <!-- FEATURED REPOS — pulled from your GitHub -->
+      <div class="section-label">:: FEATURED REPOS</div>
+
+      <div class="repo-item">
+        <a class="repo-name" href="https://github.com/Vannabe-ur/Air-Quality-pipeline" target="_blank">
+          Air-Quality-pipeline ★1
+        </a>
+        <div class="repo-desc">Spark + Airflow ETL pipeline from air quality API</div>
+        <div class="repo-lang">[ Python ]</div>
+      </div>
+
+      <div class="repo-item">
+        <a class="repo-name" href="https://github.com/Vannabe-ur/Water-Level-Monitoring" target="_blank">
+          Water-Level-Monitoring ★1
+        </a>
+        <div class="repo-desc">IoT system monitoring water level in 100cm tank</div>
+        <div class="repo-lang">[ C++ ]</div>
+      </div>
+
+      <div class="repo-item">
+        <a class="repo-name" href="https://github.com/Vannabe-ur/Temperature-change-of-Cambodia-Study" target="_blank">
+          Temp-Cambodia-Study
+        </a>
+        <div class="repo-desc">Linear/Polynomial regression on Cambodia climate data</div>
+        <div class="repo-lang">[ Jupyter Notebook ]</div>
+      </div>
+
+      <div class="repo-item">
+        <a class="repo-name" href="https://github.com/Vannabe-ur/Arduino-OLED-display-projects" target="_blank">
+          Arduino-OLED-projects ★2
+        </a>
+        <div class="repo-desc">Embedded systems & electronics prototyping projects</div>
+        <div class="repo-lang">[ Jupyter Notebook ]</div>
+      </div>
+
+      <div class="repo-item">
+        <a class="repo-name" href="https://github.com/Vannabe-ur/Message-spam-ham-detection" target="_blank">
+          Message-spam-ham-detection
+        </a>
+        <div class="repo-desc">ML classifier: spam vs ham message detection</div>
+        <div class="repo-lang">[ Jupyter Notebook ]</div>
+      </div>
+
+    </div><!-- /left-panel -->
+
+    <!-- ====================================================
+         RIGHT PANEL — Profile image + skills + achievements
+    ==================================================== -->
+    <div class="right-panel">
+
+      <div class="section-label" style="align-self:flex-start;">
+        :: PROFILE IMAGE &nbsp;<span style="opacity:0.4;">[ CLICK TO REPLACE ]</span>
+      </div>
+
+      <!--
+        IMAGE UPLOAD ZONE
+        - onclick  → opens hidden file input
+        - ondragover / ondrop → handles drag & drop
+        - The ASCII art inside is the placeholder before upload
+      -->
+      <div class="img-upload-zone" id="dropZone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="event.preventDefault(); this.style.borderColor='#00ffb3'"
+           ondragleave="this.style.borderColor='rgba(0,255,179,0.35)'"
+           ondrop="handleDrop(event)"
+           title="Click or drag & drop your photo">
+
+        <!-- ASCII art placeholder — hidden after image is uploaded -->
+        <pre style="font-family:'Share Tech Mono',monospace; font-size:5px; line-height:1.15;
+                    color:#00ffb3; letter-spacing:0.3px; text-align:center; z-index:1; padding:4px;"
+             id="asciiPlaceholder">
+   ░░▒▒▓▓███▓▓▒▒░░   ░░▒▒▓▓
+  ░░▒▒▓███████▓▒▒░░ ░▒▓▓▒░
+  ░▒▓▓████▓▓▓███▓▒░░▒▒░░
+  ░▒▓███▓░░  ░▓███▓▒▒░
+  ░▒▓██▒      ░▓██▓▒░
+   ░▒▓██▓░    ▒▓██▒░
+   ░░▒▓▓███▓▓███▓▒░
+    ░░▒▒▓▓████▓▒░░
+      ░░▒▒▓▓▒▒░░
+     ░▒▒▓▓██▓▓▒▒░
+    ░▒▓▓████████▓▒░
+   ░▒▓███▓▒░░▒▓███▓░
+   ░▒▓██▒░    ░▒▓██▓░
+    ░▒░          ░▒▓░
+        </pre>
+
+        <span class="img-overlay">IMG_SRC: [REPLACEABLE]</span>
+        <span class="img-hint" id="uploadHint" style="position:absolute; bottom:10px;">
+          [ CLICK OR DRAG YOUR PHOTO HERE ]
+        </span>
+      </div>
+
+      <!-- Hidden file input — triggered by clicking the upload zone -->
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+
+      <!-- SKILLS MATRIX -->
+      <div style="width:100%;">
+        <div class="section-label">:: SKILLS MATRIX</div>
+        <!--
+          data-w="82" stores the target width %.
+          JS reads it and sets style.width after 800ms delay,
+          triggering the CSS transition animation.
+        -->
+        <div class="skills-grid">
+          <div class="skill-item">
+            <div class="skill-label">PYTHON</div>
+            <div class="skill-track"><div class="skill-fill" data-w="82"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-label">C++ / ARDUINO</div>
+            <div class="skill-track"><div class="skill-fill" data-w="66"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-label">DATA PIPELINE</div>
+            <div class="skill-track"><div class="skill-fill" data-w="72"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-label">ML / REGRESSION</div>
+            <div class="skill-track"><div class="skill-fill" data-w="62"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-label">SPARK / AIRFLOW</div>
+            <div class="skill-track"><div class="skill-fill" data-w="55"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-label">DESIGN / UI</div>
+            <div class="skill-track"><div class="skill-fill" data-w="78"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div style="width:100%;">
+        <div class="section-label">:: ACHIEVEMENTS UNLOCKED</div>
+        <span class="tag active-tag">YOLO BADGE</span>
+        <span class="tag active-tag">PULL SHARK</span>
+        <span class="tag">OPEN SOURCE</span>
+        <span class="tag">CLIMATE CODER</span>
+      </div>
+
+      <!-- GITHUB CTA BUTTON -->
+      <a class="gh-btn" href="https://github.com/Vannabe-ur" target="_blank">
+        [ GITHUB.COM/VANNABE-UR ] ↗
+      </a>
+
+    </div><!-- /right-panel -->
+
+  </div><!-- /main-grid -->
+
+  <!-- ======================================================
+       BOTTOM BAR — BANK 1 & 2 glitch buttons
+       Faithful to the original NAKZDESIGN artwork 😄
+       Clicking calls glitch() which randomizes the label briefly
+  ====================================================== -->
+  <div class="bottom-bar">
+    <div class="bank">
+      <span class="bank-label">BANK 1</span>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+    </div>
+    <div class="bank">
+      <span class="bank-label">BANK 2</span>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-bar">
+    <span>BIOS OFF // NAKZDESIGN BIOS // MODE: COLS=80 LINES=30 // COLOR 0A</span>
+    <span>© 2025 NAKZDESIGN (C)</span>
+  </div>
+
+</div><!-- /bios-root -->
+
+
+<!-- ============================================================
+     JAVASCRIPT — three independent features:
+       1. Typewriter boot sequence
+       2. Skills bar animation
+       3. Nav tab switching
+       4. Glitch buttons
+       5. Image upload (click + drag & drop)
+============================================================ -->
+<script>
+
+  /* ----------------------------------------------------------
+     1. TYPEWRITER BOOT SEQUENCE
+     Lines are typed one-by-one with a 100ms delay between each.
+     Each line fades in via CSS animation (.boot-line).
+     Line numbers are prepended (01, 02, 03...).
+  ---------------------------------------------------------- */
+  const lines = [
+    'ECHO [I] N. VANNA — DATA SCIENCE STUDENT',
+    'ECHO [I] BUILDING AT THE INTERSECTION OF:',
+    'ECHO [I]   >> ENVIRONMENT & CLIMATE DATA',
+    'ECHO [I]   >> ECONOMICS & URBAN ANALYTICS',
+    'ECHO [I]   >> IoT & EMBEDDED SYSTEMS',
+    'ECHO [I]   >> VISUAL DESIGN',
+    'ECHO [0]',
+    'ECHO [0] :: ACTIVE PROJECTS',
+    'ECHO [0] AIR QUALITY PIPELINE  (SPARK/AIRFLOW)',
+    'ECHO [0] WATER LEVEL IoT MONITOR   (C++)',
+    'ECHO [0] CAMBODIA CLIMATE REGRESSION STUDY',
+    'ECHO [0]',
+    'ECHO [0] :: STACK',
+    'ECHO [0] PYTHON | JUPYTER | SPARK | AIRFLOW',
+    'ECHO [0] C++ | ARDUINO | OLED | SENSORS',
+  ];
+
+  const bioDiv = document.getElementById('bio-lines');
+  let i = 0;
+
+  function typeLine() {
+    if (i >= lines.length) return;       // stop when all lines done
+
+    const row = document.createElement('div');
+    row.className = 'boot-line';
+    row.style.animationDelay = (i * 0.1) + 's';  // stagger the fade-in
+
+    // Line number (01, 02...) + line text
+    row.innerHTML = '<span class="ln">' + String(i + 1).padStart(2, '0') + '</span>' + lines[i];
+
+    bioDiv.appendChild(row);
+    i++;
+    setTimeout(typeLine, 100);           // next line after 100ms
+  }
+
+  typeLine(); // kick it off
+
+
+  /* ----------------------------------------------------------
+     2. SKILLS BAR ANIMATION
+     After 800ms (letting the page settle), read each bar's
+     data-w attribute and set it as the CSS width.
+     The CSS transition: width 1.5s ease does the animation.
+  ---------------------------------------------------------- */
+  setTimeout(() => {
+    document.querySelectorAll('.skill-fill').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 800);
+
+
+  /* ----------------------------------------------------------
+     3. NAV TAB SWITCHING
+     Remove .active from all tabs, add it to the clicked one.
+     (Visual only — doesn't load different content)
+  ---------------------------------------------------------- */
+  function setNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+
+  /* ----------------------------------------------------------
+     4. GLITCH BUTTONS — "I HATE YOU" easter egg
+     Clicking randomizes the button text briefly, then resets.
+  ---------------------------------------------------------- */
+  const glitchMsgs = [
+    'I HATE YOU', 'I LOVE YOU', 'BUG FREE!',
+    '01001000',   'YOLO MODE',  'ERROR 404',
+    'VANNA.EXE',  'COMPILE OK'
+  ];
+
+  function glitch(btn) {
+    const original = btn.textContent;
+    btn.textContent = glitchMsgs[Math.floor(Math.random() * glitchMsgs.length)];
+    setTimeout(() => btn.textContent = original, 900);  // reset after 0.9s
+  }
+
+
+  /* ----------------------------------------------------------
+     5. IMAGE UPLOAD — click or drag & drop
+     - fileInput hidden <input type="file"> is triggered by clicking zone
+     - FileReader reads the file as a data URL
+     - An <img> is injected into the zone; ASCII placeholder hidden
+     - CSS filter makes it look like a green terminal photo
+  ---------------------------------------------------------- */
+  const fileInput       = document.getElementById('fileInput');
+  const dropZone        = document.getElementById('dropZone');
+  const uploadHint      = document.getElementById('uploadHint');
+  const asciiPlaceholder = document.getElementById('asciiPlaceholder');
+
+  function loadImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;  // only images
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      // Hide ASCII art + hint text
+      asciiPlaceholder.style.display = 'none';
+      uploadHint.classList.add('hidden');
+
+      // Remove old image if re-uploading
+      const existing = dropZone.querySelector('img');
+      if (existing) existing.remove();
+
+      // Create and insert the new image
+      const img = document.createElement('img');
+      img.src = ev.target.result;               // data URL
+      dropZone.insertBefore(img, dropZone.firstChild);
+      // CSS handles the green filter — no extra JS needed
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Trigger on <input> change (click-to-upload)
+  fileInput.addEventListener('change', e => loadImage(e.target.files[0]));
+
+  // Drag & drop handler
+  function handleDrop(e) {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(0,255,179,0.35)';  // reset border
+    loadImage(e.dataTransfer.files[0]);
+  }
+
+</script>
+</body>
+</html>
