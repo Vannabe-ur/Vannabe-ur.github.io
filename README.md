@@ -1,11 +1,10 @@
-# N. VANNA - BIOS PROFILE
+# N. VANNA - My BIOS PROFILE
 
 <p align="center">
   <img src="assets/art.png" alt="Profile preview" width="260" />
 </p>
 
 <p align="center">
-  <b>GitHub Profile README version of the BIOS card</b>
 </p>
 
 ---
