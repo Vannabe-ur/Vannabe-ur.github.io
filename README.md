@@ -1,1 +1,51 @@
-Checkout: https://vannabe-ur.github.io/
+# N. VANNA - BIOS PROFILE
+
+<p align="center">
+  <img src="assets/profile.png" alt="Profile preview" width="260" />
+</p>
+
+<p align="center">
+  <b>GitHub Profile README version of the BIOS card</b>
+</p>
+
+---
+
+## STATUS
+
+- `USER`: Vannabe-ur
+- `MODE`: ONLINE
+- `ROLE`: Developer / Builder / Tinkerer
+- `ENV`: GitHub Profile README
+
+## ABOUT
+
+This profile uses a retro BIOS-style theme inspired by the HTML version of the page.
+It is designed to render directly on a GitHub profile page as a `README.md`.
+
+## SKILLS
+
+- Python
+- C++ / Arduino
+- Data pipelines
+- ML / regression
+- Spark / Airflow
+- UI / design
+
+## HIGHLIGHTS
+
+- YOLO badge
+- Pull Shark
+- Open source
+- Climate coder
+
+## CONTACT
+
+- GitHub: [Vannabe-ur](https://github.com/Vannabe-ur)
+- Profile site: [vannabe-ur.github.io](https://vannabe-ur.github.io/)
+
+## NOTE
+
+For this file to appear on your GitHub profile, it must live in a repository named exactly like your GitHub username.
+For example: `Vannabe-ur/Vannabe-ur`
+
+If you want, I can also turn this into a fuller profile README with badges, stats, and a more BIOS-like layout using tables and inline HTML.
