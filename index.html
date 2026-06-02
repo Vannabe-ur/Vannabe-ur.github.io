@@ -446,8 +446,7 @@
        HEADER BAR — mimics real BIOS top strip
   ====================================================== -->
   <div class="header-bar">
-    <span>MR BIOS (TM)</span>
-    <span>COPYRIGHT NAKZDESIGN(C) 2025</span>
+    <span>Subject A-101</span>
     <span>RESEARCH</span>
     <span>VER V1.03</span>
     <span>PORT......3</span>
@@ -458,7 +457,7 @@
   ====================================================== -->
   <div class="nav-bar">
     <button class="nav-item active" onclick="setNav(this)">SUMMARY</button>
-    <button class="nav-item"        onclick="setNav(this)">FIXED</button>
+    <button class="nav-item"        onclick="setNav(this)">Education BG</button>
     <button class="nav-item"        onclick="setNav(this)">BOOT</button>
     <button class="nav-item"        onclick="setNav(this)">SEQ</button>
     <button class="nav-item"        onclick="setNav(this)">MORE+</button>
@@ -495,11 +494,15 @@
       <div class="section-label" style="margin-top:8px;">:: SYSTEM FIELDS</div>
       <div class="stat-row">
         <span class="stat-key">ROLE</span>
-        <span class="stat-val">Data Science Student</span>
+        <span class="stat-val">4th Year | Data Science Student</span>
       </div>
       <div class="stat-row">
         <span class="stat-key">INSTITUTION</span>
         <span class="stat-val">ITC, Cambodia</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">DEPARTMENT</span>
+        <span class="stat-val">Applied Mathematics and Statistics</span>
       </div>
       <div class="stat-row">
         <span class="stat-key">LOCATION</span>
@@ -511,7 +514,7 @@
       </div>
       <div class="stat-row">
         <span class="stat-key">STATUS</span>
-        <span class="stat-val">🤒 Out sick</span>
+        <span class="stat-val"> Locked IN <link ref="stylesheet" href="octicon:git-pull-request-locked-16"></span>
       </div>
       <div class="stat-row">
         <span class="stat-key">REPOS</span>
@@ -541,7 +544,6 @@
         <span class="tag active-tag">DESIGN</span>
         <span class="tag">DATA SCI</span>
         <span class="tag">ML/AI</span>
-        <span class="tag">EMBEDDED</span>
       </div>
 
       <hr class="divider">
@@ -602,8 +604,9 @@
 
       <!-- Fixed profile image loaded from assets/profile.png -->
       <div class="img-upload-zone" id="dropZone">
-        <img src="assets/profile.png" alt="Profile preview" id="profilePreview">
-        <span class="img-overlay">IMG_SRC: assets/profile.png</span>
+        <img src="assets/image.png" alt="Profile preview" id="profilePreview">
+        <span class="img-overlay">ID: D20-04</span>
+
       </div>
 
       <!-- SKILLS MATRIX -->
@@ -662,27 +665,16 @@
 
   <!-- ======================================================
        BOTTOM BAR — BANK 1 & 2 glitch buttons
-       Faithful to the original NAKZDESIGN artwork 😄
-       Clicking calls glitch() which randomizes the label briefly
   ====================================================== -->
   <div class="bottom-bar">
     <div class="bank">
-      <span class="bank-label">BANK 1</span>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
-    </div>
-    <div class="bank">
-      <span class="bank-label">BANK 2</span>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
-      <button class="hate-btn" onclick="glitch(this)">I HATE YOU</button>
+      <span class="bank-label"> >> Nothing can destroy HUMANITY, but HUMAN himself</span>
     </div>
   </div>
 
   <!-- FOOTER -->
   <div class="footer-bar">
-    <span>BIOS OFF // NAKZDESIGN BIOS // MODE: COLS=80 LINES=30 // COLOR 0A</span>
+    <span>BIOS OFF // N.VANNA // MODE: COLS=80 LINES=30 // COLOR 0A</span>
     <span>© 2025 NAKZDESIGN (C)</span>
   </div>
 
@@ -765,23 +757,6 @@
   function setNav(el) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     el.classList.add('active');
-  }
-
-
-  /* ----------------------------------------------------------
-     4. GLITCH BUTTONS — "I HATE YOU" easter egg
-     Clicking randomizes the button text briefly, then resets.
-  ---------------------------------------------------------- */
-  const glitchMsgs = [
-    'I HATE YOU', 'I LOVE YOU', 'BUG FREE!',
-    '01001000',   'YOLO MODE',  'ERROR 404',
-    'VANNA.EXE',  'COMPILE OK'
-  ];
-
-  function glitch(btn) {
-    const original = btn.textContent;
-    btn.textContent = glitchMsgs[Math.floor(Math.random() * glitchMsgs.length)];
-    setTimeout(() => btn.textContent = original, 900);  // reset after 0.9s
   }
 
 
